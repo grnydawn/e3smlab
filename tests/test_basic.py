@@ -3,8 +3,6 @@ from e3smlab import E3SMLab
 import os
 
 here = os.path.dirname(os.path.abspath(__file__))
-gzfile = os.path.join(here, "data.gz")
-jsonfile = os.path.join(here, "data.json")
 
 
 def test_basic():
@@ -15,6 +13,7 @@ def test_basic():
     ret = prj.main(cmd)
 
     assert ret == 0
+
 
 def test_print(capsys):
 
@@ -29,11 +28,31 @@ def test_print(capsys):
     assert captured.out == "21\n"
     assert captured.err == ""
 
+
 def test_nml2json():
 
-    prj = E3SMLab()
+    gzfile = os.path.join(here, "data.gz")
+    jsonfile = os.path.join(here, "data.json")
 
     cmd = "nml2json %s -o %s" % (gzfile, jsonfile)
+
+    prj = E3SMLab()
+    ret = prj.main(cmd)
+
+    assert ret == 0
+    assert os.path.exists(jsonfile)
+
+    os.remove(jsonfile)
+
+
+def test_timestat():
+
+    timestat = os.path.join(here, "timestat")
+    jsonfile = os.path.join(here, "timestat.json")
+
+    cmd = "e3smtimestat %s -o %s" % (timestat, jsonfile)
+
+    prj = E3SMLab()
     ret = prj.main(cmd)
 
     assert ret == 0

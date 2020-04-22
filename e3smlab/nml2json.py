@@ -1,4 +1,4 @@
-from microapp import App, GroupCmd
+from microapp import App, run_command
 
 
 class NML2Json(App):
@@ -14,15 +14,13 @@ class NML2Json(App):
 
     def perform(self, mgr, args):
 
-        submgr = self.get_manager()
-        gcmd = GroupCmd(submgr)
-
-        sargs = ["gunzip", args.zipfile["_"], "--", "nmlread",  "@data", "--",
+        cmd = ["gunzip", args.zipfile["_"], "--", "nmlread",  "@data", "--",
                  "dict2json", "@data"]
 
         if args.outfile:
-            sargs += ["-o", args.outfile["_"]]
+            cmd += ["-o", args.outfile["_"]]
 
-        ret, fwds = gcmd.run(submgr, [], sargs, {})
+        ret, fwds = run_command(self, cmd)
+
         output = list(v for v in fwds.values())
         self.add_forward(data=output[0]["data"])
