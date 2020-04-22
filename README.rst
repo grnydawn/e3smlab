@@ -14,6 +14,7 @@ The best way to install **e3smlab** is to use pip3 Python package installer::
 
     >>> pip3 install e3smlab --user
 
+All tools explained below in this page are installed automatically when **e3smlab** is installed.
 
 If you prefer to try the latest version of **e3smlab**, you can clone this repository and install it by using setup.py::
 
