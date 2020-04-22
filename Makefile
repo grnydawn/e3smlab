@@ -1,5 +1,5 @@
 NAME := e3smlab
-PY := python3
+PY := /usr/bin/python3
 
 .PHONY: clean clean-test clean-pyc clean-build doc help
 .DEFAULT_GOAL := help
