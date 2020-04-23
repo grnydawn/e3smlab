@@ -1,2 +1,2 @@
 
-from .main import E3SMLab
+from .main import E3SMlab

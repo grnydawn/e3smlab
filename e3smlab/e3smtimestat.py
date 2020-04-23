@@ -43,7 +43,7 @@ class E3SMTimeStat(App):
                 if not line:
                     continue
 
-                s = shlex.split(line.strip())
+                s = shlex.split(line)
 
                 name = s[0]
                 rem = " ".join(s[1:])

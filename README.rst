@@ -8,7 +8,7 @@ Energy Exascale Earth System Model (E3SM) Analysis Tools
 installation
 --------------------
 
-**e3smlab** supports Python 3.4 and later.
+**e3smlab** supports Python 3.5 and later.
 
 The best way to install **e3smlab** is to use pip3 Python package installer::
 

@@ -1,8 +1,9 @@
-from microapp import Project
+#from microapp import Project
+from meteolab import Meteolab
 from .nml2json import NML2Json
 from .e3smtimestat import E3SMTimeStat
 
-class E3SMLab(Project):
+class E3SMlab(Meteolab):
     _name_ = "e3smlab"
     _version_ = "0.1.3"
     _description_ = "E3SM Analysis Utilities"
