@@ -47,9 +47,8 @@ The tool converts a E3SM a time-stat file to json file. The example shown below 
 
     >>> e3smlab e3smtimestat timestat -o timestat.json
 
+"**e3smlab** inspectcompile" command
+-------------------------------
+The tool collects compiler command line information generated from running "case.build" in a E3SM case directory, and save it to a json file. The example shown below runs "case.build" script in a given E3SM case path and saves compiler command line information in "e3sm_compile.json" in JSON format::
 
-
-
-
-
-
+    >>> e3smlab inspectcompile <e3sm case path> -- dict2json @data -o e3sm_compile.json
