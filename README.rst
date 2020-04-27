@@ -10,9 +10,9 @@ installation
 
 **e3smlab** supports Python 3.5 or later.
 
-The best way to install **e3smlab** is to use pip3 Python package installer::
+The best way to install **e3smlab** is to use pip Python package installer::
 
-    >>> pip3 install e3smlab --user --upgrade
+    >>> pip install e3smlab --user --upgrade
 
 All tools explained below in this page are installed automatically when **e3smlab** is installed.
 
