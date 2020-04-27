@@ -59,3 +59,23 @@ def test_timestat():
     assert os.path.exists(jsonfile)
 
     os.remove(jsonfile)
+
+#def test_inspectcompile(capsys):
+#
+#    e3smcasedir = "/global/homes/y/youngsun/scratch/e3smcase"
+#
+#    cmd = "inspectcompile %s" % e3smcasedir 
+#
+#    prj = E3SMlab()
+#    ret = prj.main(cmd)
+#
+#    assert ret == 0
+#
+#    captured = capsys.readouterr()
+#    assert captured.out == "test\n"
+#    assert captured.err == ""
+#
+#    #assert os.path.exists(jsonfile)
+#
+#    #os.remove(jsonfile)
+#
