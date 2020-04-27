@@ -26,8 +26,8 @@ The installation creates a command script of **e3smlab** in a local directory de
     >>> e3smlab
 
 	usage: e3smlab [-h] [--forward expr] [--share expr] [--downcast expr]
-				   [--version]
-				   [[--] <app> [app-args]] [-- <app> [app-args]]...
+                   [--version]
+                   [[--] <app> [app-args]] [-- <app> [app-args]]...
 
 	E3SM Analysis Utilities
 
