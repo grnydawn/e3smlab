@@ -25,13 +25,18 @@ The installation creates a command script of **e3smlab** in a local directory de
 
     >>> e3smlab
 
-    usage: e3smlab [-h] [--forward expr] [--share expr] [--downcast expr]
+	usage: e3smlab [-h] [--forward expr] [--share expr] [--downcast expr]
+				   [--version]
+				   [[--] <app> [app-args]] [-- <app> [app-args]]...
 
-    optional arguments:
-      -h, --help       show this help message and exit
-      --forward expr   forward variables to next task
-      --share expr     share variables between sibling apps
-      --downcast expr  downcast variables under this app
+	E3SM Analysis Utilities
+
+	optional arguments:
+	  -h, --help       show this help message and exit
+	  --forward expr   forward variables to next app
+	  --share expr     share variables between sibling apps
+	  --downcast expr  downcast variables under this app
+	  --version        show program's version number and exit
 
 
 "**e3smlab** nml2json" command
