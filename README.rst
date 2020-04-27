@@ -36,14 +36,14 @@ The installation creates a command script of **e3smlab** in a local directory de
 
 "**e3smlab** nml2json" command
 -------------------------------
-The tool converts a gzipped namelist to json file. The example shown below reads "data.gz" of a gzipped namelist and saves it in "data.json" in JSON format::
+The tool converts a gzipped namelist to a json file. The example shown below reads "data.gz" of a gzipped namelist and saves it in "data.json" in JSON format::
 
     >>> e3smlab nml2json data.gz -o data.json
 
 
 "**e3smlab** e3smtimestat" command
 -------------------------------
-The tool converts a E3SM a time-stat file to json file. The example shown below reads "timestat" generated from running a E3SM case and saves it in "timestat.json" in JSON format::
+The tool converts a E3SM time-stat file to a json file. The example shown below reads "timestat" generated from running a E3SM case and saves it in "timestat.json" in JSON format::
 
     >>> e3smlab e3smtimestat timestat -o timestat.json
 
