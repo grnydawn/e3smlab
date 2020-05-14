@@ -1,5 +1,7 @@
+#NOTE: use virtual environment or conda environment
+
 NAME := e3smlab
-PY := /usr/bin/python3
+PY := python3
 
 .PHONY: clean clean-test clean-pyc clean-build doc help
 .DEFAULT_GOAL := help
@@ -94,6 +96,7 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	${PY} setup.py install
 
+# NOTE: use virtual environment or conda environment
 dev-install: clean ## install the package locally
 	pip3 install -e ../microapp
 	pip3 install -e ../meteolab
