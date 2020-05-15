@@ -18,6 +18,8 @@ namelists = ("atm_in", "atm_modelio", "cpl_modelio", "drv_flds_in", "drv_in",
 xmlfiles = ("env_archive", "env_batch", "env_build", "env_case",
             "env_mach_pes", "env_mach_specific", "env_run")
 
+rcfiles = ("seq_maps",)
+
 excludes = []
 
 Base = declarative_base()
@@ -62,10 +64,25 @@ class XMLInputs(Base):
         self.data = data
 
 
+class RCInputs(Base):
+    __tablename__ = 'rc_inputs'
+
+    id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
+    expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
+            nullable=False, index=True)
+    name = Column(VARCHAR(100), nullable=False, index=True)
+    data = Column(MEDIUMTEXT, nullable=False)
+
+    def __init__(self, expid, name, data):
+        self.expid = expid
+        self.name = name
+        self.data = data
+
+
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.0"
+    _version_ = "0.1.1"
 
     def __init__(self, mgr):
 
@@ -74,6 +91,25 @@ class PACEDB(App):
         self.add_argument("--password", type=str, help="database password")
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
+
+    def loaddb_rcfile(self, expid, name, rcpath):
+ 
+        cmd = ["gunzip", rcpath]
+
+        ret, fwds = run_command(self, cmd)
+
+        rcitems = []
+
+        for line in fwds["data"].strip().split("\n"):
+            items = tuple(l.strip() for l in line.split(":"))
+
+            if len(items)==2:
+                rcitems.append('"%s":%s' % items)
+
+        jsondata = "{%s}" % ",".join(rcitems) 
+
+        rc = RCInputs(expid, name, jsondata)
+        self.session.add(rc)
 
     def loaddb_xmlfile(self, expid, name, xmlpath):
  
@@ -128,6 +164,9 @@ class PACEDB(App):
                 elif prefix in xmlfiles:
                     self.loaddb_xmlfile(expid, prefix, path)
 
+                elif prefix in rcfiles:
+                    self.loaddb_rcfile(expid, prefix, path)
+
                 else:
                     pass
             else:
@@ -148,11 +187,11 @@ class PACEDB(App):
                 myzip.extractall(path=self.tempdir)
 
                 for item in os.listdir(self.tempdir):
-                    basename, ext = os.path.splitext(item)
-                    path = os.path.join(self.tempdir, item)
-
                     if item.startswith(".") or item in excludes:
                         continue
+
+                    basename, ext = os.path.splitext(item)
+                    path = os.path.join(self.tempdir, item)
 
                     if os.path.isdir(path):
 
