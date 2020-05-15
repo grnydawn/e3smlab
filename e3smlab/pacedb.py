@@ -3,18 +3,10 @@ from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from microapp import App, run_command
 
-#from sqlalchemy import *
-from sqlalchemy import create_engine, ForeignKey
-from sqlalchemy import Column
+from sqlalchemy import create_engine, ForeignKey, Column
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.mysql import INTEGER, MEDIUMTEXT, VARCHAR
-#from sqlalchemy.dialects.mysql import \
-#        BIGINT, BINARY, BIT, BLOB, BOOLEAN, CHAR, DATE, \
-#        DATETIME, DECIMAL, DECIMAL, DOUBLE, ENUM, FLOAT, INTEGER, \
-#        LONGBLOB, LONGTEXT, MEDIUMBLOB, MEDIUMINT, MEDIUMTEXT, NCHAR, \
-#        NUMERIC, NVARCHAR, REAL, SET, SMALLINT, TEXT, TIME, TIMESTAMP, \
-#        TINYBLOB, TINYINT, TINYTEXT, VARBINARY, VARCHAR, YEAR
 
 namelists = ("atm_in", "atm_modelio", "cpl_modelio", "drv_flds_in", "drv_in",
              "esp_modelio", "glc_modelio", "ice_modelio", "lnd_in",
@@ -22,7 +14,12 @@ namelists = ("atm_in", "atm_modelio", "cpl_modelio", "drv_flds_in", "drv_in",
              "ocn_modelio", "rof_modelio", "user_nl_cam", "user_nl_clm",
              "user_nl_cpl", "user_nl_mosart", "user_nl_mpascice",
              "user_nl_mpaso", "wav_modelio")
+
+xmlfiles = ("env_archive", "env_batch", "env_build", "env_case",
+            "env_mach_pes", "env_mach_specific", "env_run")
+
 excludes = []
+
 Base = declarative_base()
 
 
@@ -72,10 +69,24 @@ class PACEDB(App):
 
     def __init__(self, mgr):
 
-        self.add_argument("datadir", type=str, help="input data directory")
+        self.add_argument("datapath", type=str, help="input data path")
+        self.add_argument("dbcfg", type=str,  help="database configuration data file")
         self.add_argument("--password", type=str, help="database password")
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
+
+    def loaddb_xmlfile(self, expid, name, xmlpath):
+ 
+        cmd = ["gunzip", xmlpath, "--", "uxml2dict",  "@data", "--",
+              "dict2json", "@data"]
+
+        ret, fwds = run_command(self, cmd)
+
+        output = list(v for v in fwds.values())
+        jsondata = output[0]["data"]
+
+        xml = XMLInputs(expid, name, jsondata)
+        self.session.add(xml)
 
     def loaddb_namelist(self, expid, name, nmlpath):
 
@@ -114,76 +125,74 @@ class PACEDB(App):
                 if prefix in namelists:
                     self.loaddb_namelist(expid, prefix, path)
 
+                elif prefix in xmlfiles:
+                    self.loaddb_xmlfile(expid, prefix, path)
+
                 else:
                     pass
             else:
                 pass
 
-    def loaddb_e3smexp(self, expid, zippath):
+    def loaddb_e3smexp(self, zippath):
 
-        with ZipFile(zippath) as myzip:
-            myzip.extractall(path=self.tempdir)
+        head, tail = os.path.split(zippath)
+        basename, ext = os.path.splitext(tail)
+        items = basename.split("-")
 
-            for item in os.listdir(self.tempdir):
-                basename, ext = os.path.splitext(item)
-                path = os.path.join(self.tempdir, item)
+        if ext == ".zip" and len(items)==3:
+            expid = int(items[2])
+            self.session.add(E3SMexp(expid))
+            self.session.commit()
 
-                if item.startswith(".") or item in excludes:
-                    continue
+            with ZipFile(zippath) as myzip:
+                myzip.extractall(path=self.tempdir)
 
-                if os.path.isdir(path):
+                for item in os.listdir(self.tempdir):
+                    basename, ext = os.path.splitext(item)
+                    path = os.path.join(self.tempdir, item)
 
-                    if basename.startswith("CaseDocs"):
-                        self.loaddb_casedocs(expid, path)
+                    if item.startswith(".") or item in excludes:
+                        continue
 
+                    if os.path.isdir(path):
+
+                        if basename.startswith("CaseDocs"):
+                            self.loaddb_casedocs(expid, path)
+
+                        else:
+                            pass
                     else:
                         pass
-                else:
-                    pass
 
-            self.session.commit()
+                self.session.commit()
 
     def perform(self, mgr, args):
 
-        inputdir = args.datadir["_"]
-        if not os.path.isdir(inputdir):
-            print("Can't find input directory: %s" % inputdir, file=sys.stderr)
+        inputpath = args.datapath["_"]
+
+        dbcfg = args.dbcfg["_"]
+        if not os.path.isfile(dbcfg):
+            print("Could not find database configuration file: %s" % cbcfg)
             sys.exit(-1)
 
-        # connect to db
+        with open(dbcfg) as f:
+            myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
+            
         # mysql -u ykim -p
-        myuser, mypwd, myhost, mydb = "ykim", "exascale2020performance", "localhost", "ytestbed"
         dburl = 'mysql+pymysql://' + myuser + ':' + mypwd + '@' + myhost +  '/' + mydb
         engine = create_engine(dburl, echo=True)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-        # select the top table of e3sm case
-
         with TemporaryDirectory() as self.tempdir:
-            for item in os.listdir(inputdir):
-                basename, ext = os.path.splitext(item)
-                path = os.path.join(inputdir, item)
+            if os.path.isdir(inputpath):
+                for item in os.listdir(inputpath):
+                    self.loaddb_e3smexp(os.path.join(inputpath, item))
 
-                if os.path.isfile(path) and ext == ".zip":
-                    _, _, _expid = basename.split("-")
-                    expid = int(_expid)
-                    self.session.add(E3SMexp(expid))
-                    self.session.commit()
-                    self.loaddb_e3smexp(expid, path)
+            elif os.path.isfile(inputpath):
+                self.loaddb_e3smexp(inputpath)
 
-                break # for dev.
-    #
-#        cmd = ["gunzip", args.zipfile["_"], "--", "nmlread",  "@data", "--",
-#                 "dict2json", "@data"]
-#
-#        if args.outfile:
-#            cmd += ["-o", args.outfile["_"]]
-#
-#        ret, fwds = run_command(self, cmd)
-#
-#        output = list(v for v in fwds.values())
-#        self.add_forward(data=output[0]["data"])
-
-
+            else:
+                print("Can't find input path: %s" % inputpath, file=sys.stderr)
+                sys.exit(-1)

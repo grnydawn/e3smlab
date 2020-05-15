@@ -82,17 +82,19 @@ def test_timestat():
 
 def test_pacedb():
 
-    inputdir = "/data/pace-exp-files"
+    from pathlib import Path
+    from platform import node
 
-    import platform
-    if platform.node() != "e3sm" or not os.path.isdir(inputdir):
+    expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
+    dbcfg = "%s/dbcfg.txt" % str(Path.home())
+
+    if node() != "e3sm" or not os.path.isfile(expdata):
         return
 
     #/data/pace-exp-files/exp-ndkeen-20231.zip
     #inputdir = "/data/pace-exp-files"
 
-    #import pdb; pdb.set_trace()
-    cmd = "pacedb %s" % inputdir
+    cmd = "pacedb %s %s" % (expdata, dbcfg)
 
     prj = E3SMlab()
     ret = prj.main(cmd)
