@@ -82,14 +82,14 @@ def test_timestat():
 
 def test_pacedb():
 
-    pacedir = "/data/pace-exp-files"
+    inputdir = "/data/pace-exp-files"
 
     import platform
-    if platform.node() != "e3sm" or not os.path.isdir(pacedir):
+    if platform.node() != "e3sm" or not os.path.isdir(inputdir):
         return
 
     #/data/pace-exp-files/exp-ndkeen-20231.zip
-    inputdir = "/data/pace-exp-files"
+    #inputdir = "/data/pace-exp-files"
 
     #import pdb; pdb.set_trace()
     cmd = "pacedb %s" % inputdir
