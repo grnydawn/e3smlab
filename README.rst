@@ -57,3 +57,9 @@ The tool converts a E3SM time-stat file to a json file. The example shown below 
 The tool collects compiler command line information generated from running "case.build" in a E3SM case directory, and save it to a json file. The example shown below runs "case.build" script in a given E3SM case path and saves compiler command line information in "e3sm_compile.json" in JSON format::
 
     >>> e3smlab inspectcompile <e3sm case path> -- dict2json @data -o e3sm_compile.json
+
+"**e3smlab** pacedb" command
+-------------------------------
+The tool reads E3SM experiment data and loads it to PACE database. The example shown below reads e3sm experiment file(s) specified in the first argument and upload them to PACE database specified as the second argument. The second db config. argument is a ascii file that has four lines with (username, password, hostname, databasename) per each line::
+
+    >>> e3smlab pacedb <e3sm experiment file or directory> <pace database config. file>
