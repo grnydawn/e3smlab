@@ -13,10 +13,12 @@ namelists = ("atm_in", "atm_modelio", "cpl_modelio", "drv_flds_in", "drv_in",
              "lnd_modelio", "mosart_in", "mpaso_in", "mpassi_in",
              "ocn_modelio", "rof_modelio", "user_nl_cam", "user_nl_clm",
              "user_nl_cpl", "user_nl_mosart", "user_nl_mpascice",
-             "user_nl_mpaso", "wav_modelio")
+             "user_nl_mpaso", "wav_modelio", "iac_modelio", "docn_in",
+             "user_nl_docn", "user_nl_cice", "ice_in")
 
 xmlfiles = ("env_archive", "env_batch", "env_build", "env_case",
-            "env_mach_pes", "env_mach_specific", "env_run")
+            "env_mach_pes", "env_mach_specific", "env_run", "env_workflow",
+            )
 
 rcfiles = ("seq_maps",)
 
@@ -82,13 +84,14 @@ class RCInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.1"
+    _version_ = "0.1.2"
 
     def __init__(self, mgr):
 
         self.add_argument("datapath", type=str, help="input data path")
         self.add_argument("dbcfg", type=str,  help="database configuration data file")
-        self.add_argument("--password", type=str, help="database password")
+        self.add_argument("--dbecho", action="store_true",  help="echo database transactions")
+
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
 
@@ -168,7 +171,7 @@ class PACEDB(App):
                     self.loaddb_rcfile(expid, prefix, path)
 
                 else:
-                    pass
+                    print("Warning: %s is not parsed." % basename)
             else:
                 pass
 
@@ -217,9 +220,8 @@ class PACEDB(App):
         with open(dbcfg) as f:
             myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
             
-        # mysql -u ykim -p
-        dburl = 'mysql+pymysql://' + myuser + ':' + mypwd + '@' + myhost +  '/' + mydb
-        engine = create_engine(dburl, echo=True)
+        dburl = 'mysql+pymysql://%s:%s@%s/%s' % (myuser, mypwd, myhost, mydb)
+        engine = create_engine(dburl, echo=args.dbecho)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
