@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, shutil
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from microapp import App, run_command
@@ -84,13 +84,14 @@ class RCInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.2"
+    _version_ = "0.1.3"
 
     def __init__(self, mgr):
 
         self.add_argument("datapath", type=str, help="input data path")
         self.add_argument("dbcfg", type=str,  help="database configuration data file")
         self.add_argument("--dbecho", action="store_true",  help="echo database transactions")
+        self.add_argument("--progress", action="store_true",  help="show progress info")
 
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
@@ -119,38 +120,57 @@ class PACEDB(App):
         cmd = ["gunzip", xmlpath, "--", "uxml2dict",  "@data", "--",
               "dict2json", "@data"]
 
-        ret, fwds = run_command(self, cmd)
-
-        output = list(v for v in fwds.values())
-        jsondata = output[0]["data"]
-
-        xml = XMLInputs(expid, name, jsondata)
-        self.session.add(xml)
-
-    def loaddb_namelist(self, expid, name, nmlpath):
-
-        cmd = ["gunzip", nmlpath, "--", "nmlread",  "@data", "--",
-                 "dict2json", "@data"]
+        import xml
 
         try:
             ret, fwds = run_command(self, cmd)
 
             output = list(v for v in fwds.values())
             jsondata = output[0]["data"]
+
+            xml = XMLInputs(expid, name, jsondata)
+            self.session.add(xml)
+
+        except xml.parsers.expat.ExpatError as err:
+            print("Warning: %s" % str(err))
+
+        except Exception as err:
+            print("Warning: %s" % str(err))
+            import pdb; pdb.set_trace()
+            print(err)
+
+    def loaddb_namelist(self, expid, name, nmlpath):
+
+        cmd = ["gunzip", nmlpath, "--", "nmlread",  "@data", "--",
+                 "dict2json", "@data"]
+
+        jsondata = None
+
+        try:
+            ret, fwds = run_command(self, cmd)
+
+            output = list(v for v in fwds.values())
+            jsondata = output[0]["data"]
+
         except IndexError as err:
             if name.startswith("user_nl"):
                 jsondata = ""
 
             else:
+                import pdb; pdb.set_trace()
                 raise err
                 
+        except StopIteration as err:
+            print("Warning: %s" % str(err))
+
         except Exception as err:
-            print(err)
+            print("Warning: %s" % str(err))
             import pdb; pdb.set_trace()
             print(err)
 
-        nml = NamelistInputs(expid, name, jsondata)
-        self.session.add(nml)
+        if jsondata:
+            nml = NamelistInputs(expid, name, jsondata)
+            self.session.add(nml)
 
     def loaddb_casedocs(self, expid, casedocpath):
 
@@ -171,7 +191,8 @@ class PACEDB(App):
                     self.loaddb_rcfile(expid, prefix, path)
 
                 else:
-                    print("Warning: %s is not parsed." % basename)
+                    pass
+                    #print("Warning: %s is not parsed." % basename)
             else:
                 pass
 
@@ -186,15 +207,19 @@ class PACEDB(App):
             self.session.add(E3SMexp(expid))
             self.session.commit()
 
-            with ZipFile(zippath) as myzip:
-                myzip.extractall(path=self.tempdir)
+            if self.show_progress:
+                print("reading %s" % zippath)
 
-                for item in os.listdir(self.tempdir):
+            with ZipFile(zippath) as myzip:
+                unzipdir = os.path.join(self.tempdir, basename)
+                myzip.extractall(path=unzipdir)
+
+                for item in os.listdir(unzipdir):
                     if item.startswith(".") or item in excludes:
                         continue
 
                     basename, ext = os.path.splitext(item)
-                    path = os.path.join(self.tempdir, item)
+                    path = os.path.join(unzipdir, item)
 
                     if os.path.isdir(path):
 
@@ -207,8 +232,11 @@ class PACEDB(App):
                         pass
 
                 self.session.commit()
+                shutil.rmtree(unzipdir, ignore_errors=True)
 
     def perform(self, mgr, args):
+
+        self.show_progress = args.progress
 
         inputpath = args.datapath["_"]
 

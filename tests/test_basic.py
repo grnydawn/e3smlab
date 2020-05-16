@@ -86,9 +86,10 @@ def test_pacedb():
     from platform import node
 
     expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
+    #expdata = "/data/pace-exp-files"
     dbcfg = "%s/dbcfg.txt" % str(Path.home())
 
-    if node() != "e3sm" or not os.path.isfile(expdata):
+    if node() != "e3sm" or not os.path.exists(expdata):
         return
 
     #/data/pace-exp-files/exp-ndkeen-20231.zip
