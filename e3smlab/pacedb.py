@@ -1,4 +1,4 @@
-import sys, os, shutil
+import sys, os, shutil, json
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from microapp import App, run_command
@@ -84,7 +84,7 @@ class RCInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.3"
+    _version_ = "0.1.4"
 
     def __init__(self, mgr):
 
@@ -92,6 +92,7 @@ class PACEDB(App):
         self.add_argument("dbcfg", type=str,  help="database configuration data file")
         self.add_argument("--dbecho", action="store_true",  help="echo database transactions")
         self.add_argument("--progress", action="store_true",  help="show progress info")
+        self.add_argument("--verify", action="store_true",  help="verify database correctlness")
 
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
@@ -99,7 +100,6 @@ class PACEDB(App):
     def loaddb_rcfile(self, expid, name, rcpath):
  
         cmd = ["gunzip", rcpath]
-
         ret, fwds = run_command(self, cmd)
 
         rcitems = []
@@ -112,15 +112,30 @@ class PACEDB(App):
 
         jsondata = "{%s}" % ",".join(rcitems) 
 
-        rc = RCInputs(expid, name, jsondata)
-        self.session.add(rc)
+        if self.verify_db:
+            rc = self.session.query(RCInputs).filter_by(
+                    expid=expid, name=name).first()
+
+            e3smdump = json.dumps(rc.data, sort_keys=True) if rc else ""
+            dbdump = json.dumps(jsondata, sort_keys=True)
+            if e3smdump != dbdump:
+                print("#######################################################")
+                print("rc verification failure: expid=%d, name=%s" % (expid, name))
+                print("From e3sm experiment:")
+                print(e3smdump)
+                print("-------------------------------------------------------")
+                print("From database:")
+                print(dbdump)
+        else:
+            rc = RCInputs(expid, name, jsondata)
+            self.session.add(rc)
 
     def loaddb_xmlfile(self, expid, name, xmlpath):
  
         cmd = ["gunzip", xmlpath, "--", "uxml2dict",  "@data", "--",
               "dict2json", "@data"]
 
-        import xml
+        from xml.parsers.expat import ExpatError
 
         try:
             ret, fwds = run_command(self, cmd)
@@ -128,10 +143,25 @@ class PACEDB(App):
             output = list(v for v in fwds.values())
             jsondata = output[0]["data"]
 
-            xml = XMLInputs(expid, name, jsondata)
-            self.session.add(xml)
+            if self.verify_db:
+                xml = self.session.query(XMLInputs).filter_by(
+                        expid=expid, name=name).first()
 
-        except xml.parsers.expat.ExpatError as err:
+                e3smdump = json.dumps(xml.data, sort_keys=True) if xml else ""
+                dbdump = json.dumps(jsondata, sort_keys=True)
+                if e3smdump != dbdump:
+                    print("#######################################################")
+                    print("xml verification failure: expid=%d, name=%s" % (expid, name))
+                    print("From e3sm experiment:")
+                    print(e3smdump)
+                    print("-------------------------------------------------------")
+                    print("From database:")
+                    print(dbdump)
+            else:
+                xml = XMLInputs(expid, name, jsondata)
+                self.session.add(xml)
+
+        except ExpatError as err:
             print("Warning: %s" % str(err))
 
         except Exception as err:
@@ -168,7 +198,22 @@ class PACEDB(App):
             import pdb; pdb.set_trace()
             print(err)
 
-        if jsondata:
+        if self.verify_db:
+            nml = self.session.query(NamelistInputs).filter_by(
+                    expid=expid, name=name).first()
+
+            e3smdump = json.dumps(nml.data, sort_keys=True) if nml else ""
+            dbdump = json.dumps(jsondata, sort_keys=True)
+            if e3smdump != dbdump:
+                print("#######################################################")
+                print("namelist verification failure: expid=%d, name=%s" % (expid, name))
+                print("From e3sm experiment:")
+                print(e3smdump)
+                print("-------------------------------------------------------")
+                print("From database:")
+                print(dbdump)
+
+        elif jsondata:
             nml = NamelistInputs(expid, name, jsondata)
             self.session.add(nml)
 
@@ -204,8 +249,10 @@ class PACEDB(App):
 
         if ext == ".zip" and len(items)==3:
             expid = int(items[2])
-            self.session.add(E3SMexp(expid))
-            self.session.commit()
+
+            if not self.verify_db:
+                self.session.add(E3SMexp(expid))
+                self.session.commit()
 
             if self.show_progress:
                 print("reading %s" % zippath)
@@ -231,12 +278,15 @@ class PACEDB(App):
                     else:
                         pass
 
-                self.session.commit()
+                if not self.verify_db:
+                    self.session.commit()
+
                 shutil.rmtree(unzipdir, ignore_errors=True)
 
     def perform(self, mgr, args):
 
         self.show_progress = args.progress
+        self.verify_db = args.verify
 
         inputpath = args.datapath["_"]
 
