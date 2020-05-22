@@ -58,8 +58,10 @@ The tool collects compiler command line information generated from running "case
 
     >>> e3smlab inspectcompile <e3sm case path> -- dict2json @data -o e3sm_compile.json
 
-"**e3smlab** :download:`pacedb<README.pacedb.rst>`" command
+"**e3smlab** pacedb" command
 -----------------------------------------------------------------------
 The tool reads E3SM experiment data and loads it to PACE database. The example shown below reads e3sm experiment file(s) specified in the first argument and upload them to PACE database specified as the second argument. The second db config. argument is a ascii file that has four lines with (username, password, hostname, databasename) per each line::
 
     >>> e3smlab pacedb <e3sm experiment file or directory> --db-cfg <pace database config. file>
+
+Please see `pacedb<https://github.com/grnydawn/e3smlab/edit/master/README.rst>` for details.
