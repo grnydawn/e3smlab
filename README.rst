@@ -62,4 +62,4 @@ The tool collects compiler command line information generated from running "case
 -------------------------------
 The tool reads E3SM experiment data and loads it to PACE database. The example shown below reads e3sm experiment file(s) specified in the first argument and upload them to PACE database specified as the second argument. The second db config. argument is a ascii file that has four lines with (username, password, hostname, databasename) per each line::
 
-    >>> e3smlab pacedb <e3sm experiment file or directory> <pace database config. file>
+    >>> e3smlab pacedb <e3sm experiment file or directory> --db-cfg <pace database config. file>
