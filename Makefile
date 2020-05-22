@@ -99,6 +99,7 @@ install: clean ## install the package to the active Python's site-packages
 # NOTE: use virtual environment or conda environment
 dev-install: clean ## install the package locally
 	pip3 install -e ../microapp
+	pip3 install -e ../langlab
 	pip3 install -e ../meteolab
 	pip3 install -e .
 	#${PY} setup.py develop

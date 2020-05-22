@@ -1,4 +1,4 @@
-from microapp import App, run_command
+from microapp import App
 
 import re
 import shlex
@@ -71,6 +71,6 @@ class E3SMTimeStat(App):
         if args.outfile:
             cmd += ["-o", args.outfile["_"]]
 
-        ret, fwds = run_command(self, cmd, fwds={"data": rawdata})
+        ret, fwds = mgr.run_command(cmd, forward={"data": rawdata})
 
         self.add_forward(data=fwds["data"])

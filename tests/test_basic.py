@@ -80,24 +80,46 @@ def test_timestat():
 #    #os.remove(jsonfile)
 
 
-def test_pacedb():
+#def test_pacedb():
+#
+#    from pathlib import Path
+#    from platform import node
+#
+#    expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
+#    #expdata = "/data/pace-exp-files"
+#    dbcfg = "%s/dbcfg.txt" % str(Path.home())
+#
+#    if node() != "e3sm" or not os.path.exists(expdata):
+#        return
+#
+#    #/data/pace-exp-files/exp-ndkeen-20231.zip
+#    #inputdir = "/data/pace-exp-files"
+#
+#    cmd = "pacedb %s %s" % (expdata, dbcfg)
+#
+#    prj = E3SMlab()
+#    ret = prj.main(cmd)
+#
+#    assert ret == 0
+#
 
-    from pathlib import Path
-    from platform import node
-
-    expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
-    #expdata = "/data/pace-exp-files"
-    dbcfg = "%s/dbcfg.txt" % str(Path.home())
-
-    if node() != "e3sm" or not os.path.exists(expdata):
-        return
-
-    #/data/pace-exp-files/exp-ndkeen-20231.zip
-    #inputdir = "/data/pace-exp-files"
-
-    cmd = "pacedb %s %s" % (expdata, dbcfg)
-
-    prj = E3SMlab()
-    ret = prj.main(cmd)
-
-    assert ret == 0
+#def test_pacedb_run_command():
+#
+#    from pathlib import Path
+#    from platform import node
+#
+#    #expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
+#    expdata = "/data/pace-exp-files"
+#    dbcfg = "%s/dbcfg.txt" % str(Path.home())
+#
+#    if node() != "e3sm" or not os.path.exists(expdata):
+#        return
+#
+#    #/data/pace-exp-files/exp-ndkeen-20231.zip
+#    #inputdir = "/data/pace-exp-files"
+#
+#    cmd = ["pacedb", expdata, "--db-cfg", dbcfg, "--create-expid-table"]
+#    lab = E3SMlab()
+#    ret, fwds = lab.run_command(cmd)
+#
+#    assert ret == 0

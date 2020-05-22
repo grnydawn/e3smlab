@@ -1,4 +1,4 @@
-from microapp import App, run_command
+from microapp import App
 
 
 class NML2Json(App):
@@ -20,7 +20,6 @@ class NML2Json(App):
         if args.outfile:
             cmd += ["-o", args.outfile["_"]]
 
-        ret, fwds = run_command(self, cmd)
+        ret, fwds = mgr.run_command(cmd)
 
-        output = list(v for v in fwds.values())
-        self.add_forward(data=output[0]["data"])
+        self.add_forward(data=fwds["data"])

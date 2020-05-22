@@ -3,7 +3,7 @@ import sys
 import os
 import subprocess
 
-from microapp import App, run_command
+from microapp import App
 from e3smlab import kgcompiler
 
 

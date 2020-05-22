@@ -6,8 +6,8 @@ def main():
     from e3smlab.main import E3SMlab as elab
 
     console_scripts = ["e3smlab=e3smlab.__main__:main"]
-    install_requires = ["meteolab>=0.1.5", "gunzip", "nmlread", "dict2json",
-                        "uxml2dict"]
+    install_requires = ["meteolab>=0.2.0", "gunzip", "nmlread", "dict2json",
+                        "uxml2dict", "langlab>=0.2.0"]
 
     setup(
         name=elab._name_,

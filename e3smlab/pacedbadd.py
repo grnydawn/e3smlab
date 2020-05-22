@@ -1,10 +1,9 @@
-import sys, os, shutil, json, typing
+import sys, os, shutil, json
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from microapp import App
 
 from sqlalchemy import create_engine, ForeignKey, Column
-from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.mysql import INTEGER, MEDIUMTEXT, VARCHAR
@@ -23,10 +22,7 @@ xmlfiles = ("env_archive", "env_batch", "env_build", "env_case",
 
 rcfiles = ("seq_maps",)
 
-makefiles = ("Depends.intel",)
-
-exclude_zipfiles = []
-excludes_casedocs = ["env_mach_specific.xml~"]
+excludes = []
 
 Base = declarative_base()
 
@@ -43,10 +39,10 @@ class E3SMexp(Base):
 class NamelistInputs(Base):
     __tablename__ = 'namelist_inputs'
 
-    #id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
+    id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
     expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
-            nullable=False, index=True, primary_key=True)
-    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
+            nullable=False, index=True)
+    name = Column(VARCHAR(100), nullable=False, index=True)
     data = Column(MEDIUMTEXT, nullable=False)
 
     def __init__(self, expid, name, data):
@@ -58,10 +54,10 @@ class NamelistInputs(Base):
 class XMLInputs(Base):
     __tablename__ = 'xml_inputs'
 
-    #id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
+    id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
     expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
-            nullable=False, index=True, primary_key=True)
-    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
+            nullable=False, index=True)
+    name = Column(VARCHAR(100), nullable=False, index=True)
     data = Column(MEDIUMTEXT, nullable=False)
 
     def __init__(self, expid, name, data):
@@ -73,24 +69,10 @@ class XMLInputs(Base):
 class RCInputs(Base):
     __tablename__ = 'rc_inputs'
 
-    #id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
+    id = Column(INTEGER(unsigned=True), primary_key=True,autoincrement=True)
     expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
-            nullable=False, index=True, primary_key=True)
-    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
-    data = Column(MEDIUMTEXT, nullable=False)
-
-    def __init__(self, expid, name, data):
-        self.expid = expid
-        self.name = name
-        self.data = data
-
-
-class MakefileInputs(Base):
-    __tablename__ = 'makefile_inputs'
-
-    expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
-            nullable=False, index=True, primary_key=True)
-    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
+            nullable=False, index=True)
+    name = Column(VARCHAR(100), nullable=False, index=True)
     data = Column(MEDIUMTEXT, nullable=False)
 
     def __init__(self, expid, name, data):
@@ -107,46 +89,13 @@ class PACEDB(App):
     def __init__(self, mgr):
 
         self.add_argument("datapath", type=str, help="input data path")
-        self.add_argument("--db-cfg", type=str,  help="database configuration data file")
-        self.add_argument("--db-echo", action="store_true",  help="echo database transactions")
+        self.add_argument("dbcfg", type=str,  help="database configuration data file")
+        self.add_argument("--dbecho", action="store_true",  help="echo database transactions")
         self.add_argument("--progress", action="store_true",  help="show progress info")
         self.add_argument("--verify", action="store_true",  help="verify database correctlness")
-        self.add_argument("--create-expid-table", action="store_true",  help="create expid table for development")
-        self.add_argument("--db-session", type=typing.Any,  help="database session")
 
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
-
-    def loaddb_makefile(self, expid, name, makefile):
-  
-        cmd = ["gunzip", makefile, "--", "parsemk",  "@data"]
-
-        mgr = self.get_manager()
-        ret, fwds = mgr.run_command(cmd)
-
-        mkitems = []
-
-        for item in fwds["data"]:
-            mkitems.append(item.to_source())
-
-        jsondata = json.dumps(mkitems)
-
-        if self.verify_db:
-            mk = self.session.query(MakefileInputs).filter_by(
-                    expid=expid, name=name).first()
-
-            if not mk or jsondata != mk.data:
-                print("#######################################################")
-                print("makefile verification failure: expid=%d, name=%s" % (expid, name))
-                print("From e3sm experiment:")
-                print(jsondata)
-                print("-------------------------------------------------------")
-                print("From database:")
-                print(mk.data if mk else mk)
-        else:
-            mk = MakefileInputs(expid, name, jsondata)
-            self.session.add(mk)
-
 
     def loaddb_rcfile(self, expid, name, rcpath):
  
@@ -168,19 +117,16 @@ class PACEDB(App):
             rc = self.session.query(RCInputs).filter_by(
                     expid=expid, name=name).first()
 
-            #e3smdump = json.dumps(rc.data, sort_keys=True) if rc else ""
-            #dbdump = json.dumps(jsondata, sort_keys=True)
-            #if e3smdump != dbdump:
-            if not rc or jsondata != rc.data:
+            e3smdump = json.dumps(rc.data, sort_keys=True) if rc else ""
+            dbdump = json.dumps(jsondata, sort_keys=True)
+            if e3smdump != dbdump:
                 print("#######################################################")
                 print("rc verification failure: expid=%d, name=%s" % (expid, name))
                 print("From e3sm experiment:")
-                #print(e3smdump)
-                print(jsondata)
+                print(e3smdump)
                 print("-------------------------------------------------------")
                 print("From database:")
-                #print(dbdump)
-                print(rc.data if rc else rc)
+                print(dbdump)
         else:
             rc = RCInputs(expid, name, jsondata)
             self.session.add(rc)
@@ -193,6 +139,7 @@ class PACEDB(App):
         from xml.parsers.expat import ExpatError
 
         try:
+            
             mgr = self.get_manager()
             ret, fwds = mgr.run_command(cmd)
 
@@ -202,19 +149,16 @@ class PACEDB(App):
                 xml = self.session.query(XMLInputs).filter_by(
                         expid=expid, name=name).first()
 
-                #e3smdump = json.dumps(xml.data, sort_keys=True) if xml else ""
-                #dbdump = json.dumps(jsondata, sort_keys=True)
-                #if e3smdump != dbdump:
-                if not xml or jsondata != xml.data:
+                e3smdump = json.dumps(xml.data, sort_keys=True) if xml else ""
+                dbdump = json.dumps(jsondata, sort_keys=True)
+                if e3smdump != dbdump:
                     print("#######################################################")
                     print("xml verification failure: expid=%d, name=%s" % (expid, name))
                     print("From e3sm experiment:")
-                    #print(e3smdump)
-                    print(jsondata)
+                    print(e3smdump)
                     print("-------------------------------------------------------")
                     print("From database:")
-                    #print(dbdump)
-                    print(xml.data if xml else xml)
+                    print(dbdump)
             else:
                 xml = XMLInputs(expid, name, jsondata)
                 self.session.add(xml)
@@ -234,11 +178,12 @@ class PACEDB(App):
 
         jsondata = None
 
-        try:
+        try: 
             mgr = self.get_manager()
             ret, fwds = mgr.run_command(cmd)
 
-            jsondata = fwds["data"]
+            output = list(v for v in fwds)
+            jsondata = output[0]["data"]
 
         except IndexError as err:
             if name.startswith("user_nl"):
@@ -260,19 +205,16 @@ class PACEDB(App):
             nml = self.session.query(NamelistInputs).filter_by(
                     expid=expid, name=name).first()
 
-            #e3smdump = json.dumps(nml.data, sort_keys=True) if nml else ""
-            #dbdump = json.dumps(jsondata, sort_keys=True)
-            #if e3smdump != dbdump:
-            if not nml or jsondata != nml.data:
+            e3smdump = json.dumps(nml.data, sort_keys=True) if nml else ""
+            dbdump = json.dumps(jsondata, sort_keys=True)
+            if e3smdump != dbdump:
                 print("#######################################################")
                 print("namelist verification failure: expid=%d, name=%s" % (expid, name))
                 print("From e3sm experiment:")
-                #print(e3smdump)
-                print(jsondata)
+                print(e3smdump)
                 print("-------------------------------------------------------")
                 print("From database:")
-                #print(dbdump)
-                print(nml.data if nml else nml)
+                print(dbdump)
 
         elif jsondata:
             nml = NamelistInputs(expid, name, jsondata)
@@ -283,8 +225,6 @@ class PACEDB(App):
         for item in os.listdir(casedocpath):
             basename, ext = os.path.splitext(item)
             path = os.path.join(casedocpath, item)
-            if any(basename.startswith(e) for e in excludes_casedocs):
-                continue
 
             if os.path.isfile(path) and ext == ".gz":
                 prefix, _ = basename.split(".", 1)
@@ -298,15 +238,9 @@ class PACEDB(App):
                 elif prefix in rcfiles:
                     self.loaddb_rcfile(expid, prefix, path)
 
-                elif any(basename.startswith(p) for p in makefiles):
-                    for makefile in makefiles:
-                        if basename.startswith(makefile):
-                            self.loaddb_makefile(expid, makefile, path)
-                            break
                 else:
                     pass
                     #print("Warning: %s is not parsed." % basename)
-
             else:
                 pass
 
@@ -319,16 +253,9 @@ class PACEDB(App):
         if ext == ".zip" and len(items)==3:
             expid = int(items[2])
 
-            if not self.verify_db and self.create_expid_table:
-
-                    try:
-                        self.session.add(E3SMexp(expid))
-                        self.session.commit()
-
-                    except (InvalidRequestError, IntegrityError) as err:
-                        print("Warning: database integrity error: %s" % str(err))
-                        self.session.rollback()
-                        return
+            if not self.verify_db:
+                self.session.add(E3SMexp(expid))
+                self.session.commit()
 
             if self.show_progress:
                 print("reading %s" % zippath)
@@ -338,7 +265,7 @@ class PACEDB(App):
                 myzip.extractall(path=unzipdir)
 
                 for item in os.listdir(unzipdir):
-                    if item.startswith(".") or item in exclude_zipfiles:
+                    if item.startswith(".") or item in excludes:
                         continue
 
                     basename, ext = os.path.splitext(item)
@@ -355,13 +282,7 @@ class PACEDB(App):
                         pass
 
                 if not self.verify_db:
-
-                    try:
-                        self.session.commit()
-
-                    except (InvalidRequestError, IntegrityError) as err:
-                        print("Warning: database integrity error: %s" % str(err))
-                        self.session.rollback()
+                    self.session.commit()
 
                 shutil.rmtree(unzipdir, ignore_errors=True)
 
@@ -369,27 +290,22 @@ class PACEDB(App):
 
         self.show_progress = args.progress
         self.verify_db = args.verify
-        self.create_expid_table = args.create_expid_table
 
         inputpath = args.datapath["_"]
 
-        if not args.db_session:
-            dbcfg = args.db_cfg["_"]
-            if not os.path.isfile(dbcfg):
-                print("Could not find database configuration file: %s" % cbcfg)
-                sys.exit(-1)
+        dbcfg = args.dbcfg["_"]
+        if not os.path.isfile(dbcfg):
+            print("Could not find database configuration file: %s" % cbcfg)
+            sys.exit(-1)
 
-            with open(dbcfg) as f:
-                myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
-                
-            dburl = 'mysql+pymysql://%s:%s@%s/%s' % (myuser, mypwd, myhost, mydb)
-            engine = create_engine(dburl, echo=args.db_echo)
-            Base.metadata.create_all(engine)
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
-
-        else:
-            self.session = args.db_session["_"]
+        with open(dbcfg) as f:
+            myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
+            
+        dburl = 'mysql+pymysql://%s:%s@%s/%s' % (myuser, mypwd, myhost, mydb)
+        engine = create_engine(dburl, echo=args.dbecho)
+        Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
 
         with TemporaryDirectory() as self.tempdir:
             if os.path.isdir(inputpath):
