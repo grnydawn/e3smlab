@@ -64,5 +64,4 @@ The tool reads E3SM experiment data and loads it to PACE database. The example s
 
     >>> e3smlab pacedb <e3sm experiment file or directory> --db-cfg <pace database config. file>
 
-Please see `pacedb<README.pacedb.rst>`_ for details.
-Please see `pacedb<https://github.com/grnydawn/e3smlab/blob/master/README.pacedb.rst>`_ for details.
+Please see `pacedb<https://github.com/grnydawn/e3smlab/blob/master/README.pacedb.rst>` for details.
