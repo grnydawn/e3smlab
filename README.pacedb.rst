@@ -98,7 +98,7 @@ Example::
     cmd = ["pacedb", "exp-ndk-17906.zip", "--db-session", "@session"]
     ret, _ = lab.run_command(cmd, forward={"session": session})
 
-"E3SMlab" is a driver that runs various e3sm commands. To see what commands are available, run "e3smlab list".
+"E3SMlab" is a driver that runs various e3smlab commands. To see what commands are available, run "e3smlab list".
 
 "cmd" is a list of command-line arguments as explained in previous section.
 
