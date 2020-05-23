@@ -7,7 +7,7 @@ from .pacedbnml import PACEDBNML
 
 class E3SMlab(Meteolab):
     _name_ = "e3smlab"
-    _version_ = "0.2.3"
+    _version_ = "0.2.4"
     _description_ = "E3SM Analysis Utilities"
     _long_description_ = "Tools for Analysis of E3SM project"
     _author_ = "Youngsung Kim"

@@ -61,43 +61,48 @@ class PACEDBNML(App):
 
         for gname, group in nml.items():
             if group:
-                out.append("{name: 'group', value: '%s', _children:[" % gname)
+                out.append("{name: '%s', value: '', _children:[" % gname)
                 for item, value in group.items():
                     if isinstance(value, dict):
-                        out.append("{name: 'array', value: '%s', _children:[" % item)
+                        out.append("{name: '%s', value: '', _children:[" % item)
                         for k, v in value.items():
-                            out.append("{name: '%s', value: %s}," % (
+                            out.append("{name: '%s', value: '%s'}," % (
                                     k, self.tostr(v)))
                         out.append("]},")
                     else:
-                        out.append("{name: '%s', value: %s}," % (
+                        out.append("{name: '%s', value: '%s'}," % (
                                     item, self.tostr(value)))
                 out.append("]},")
             else:
-                out.append("{name: 'group', value: '%s'}," % gname)
+                out.append("{name: '%s', value: ''}," % gname)
 
-    def tostr(self, value):
+    def tostr(self, value, escape=True):
 
         if isinstance(value, list):
-            return "[%s]" % ", ".join([self.tostr(v) for v in value])
+            text = ", ".join([self.tostr(v, False) for v in value])
 
         elif isinstance(value, str):
-            return "'%s'" % value.replace("'", "\\'")
+            text = "'%s'" % value
 
         elif isinstance(value, bool):
             if value:
-                return "'.true.'"
+                text = ".true."
 
             else:
-                return "'.false.'"
+                text = ".false."
         else:
             try:
                 x = float(value)
-                return "'%s'" % str(value)
+                text = str(value)
 
             except Exception as err:
                 import pdb; pdb.set_trace()
                 print(err)
+
+        if escape:
+            text = text.replace("'", "\\'")
+
+        return text
 
     def table_e3smexp(self, expid, namelist):
 
@@ -167,20 +172,20 @@ class PACEDBNML(App):
 
         for expid, exp in self.fdata.items():
             if exp: 
-                data.append("{name: 'expid', value: '%s', _children:[" % expid)
+                data.append("{name: 'exp-id', value: '%s', _children:[" % expid)
 
                 for name, out in exp.items():
                     if out:
-                        data.append("{name: 'namelist', value: '%s', _children:[" % name)
+                        data.append("{name: '%s', value: '', _children:[" % name)
                         data.append("".join(out))
                         data.append("]},")
 
                     else:
-                        data.append("{name: 'namelist', value: '%s'}," % name)
+                        data.append("{name: '%s', value: ''}," % name)
 
                 data.append("]},")
             else:
-                data.append("{name: 'expid', value: '%s'}," % expid)
+                data.append("{name: 'exp-id', value: '%s'}," % expid)
 
         data.append("]")
 
