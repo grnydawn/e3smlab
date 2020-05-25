@@ -82,18 +82,39 @@ class PACEDBTBL(App):
 
         self.register_forward("data", help="formatted namelists")
 
+    def extract_xmlattrs(self, value):
+
+        id = None
+        attrs = []
+
+        for key in list(value.keys()):
+            if key.startswith("@"):
+                if key == "@id":
+                    id = value[key]
+
+                else:
+                    attrs.append("%s=%s" % (key[1:], self.tostr(value[key])))
+
+                del value[key]
+
+        return id, ", ".join(attrs)
+
     def gen_xml_tabulator(self, xml, out):
 
         if isinstance(xml, dict):
             for key, value in xml.items():
 
                 if isinstance(value, dict):
-                    out.append("{name: '%s', value: '', _children:[" % self.tostr(key))
+                    name, attrs = self.extract_xmlattrs(value)
+                    if name:
+                        out.append("{name: '%s', value: '%s', _children:[" % (name, attrs))
+                    else:
+                        out.append("{name: '%s', value: '%s', _children:[" % (key, attrs))
                     self.gen_xml_tabulator(value, out)
                     out.append("]},")
 
                 elif isinstance(value, list):
-                    out.append("{name: '%s', value: '', _children:[" % self.tostr(key))
+                    out.append("{name: '%s', value: '', _children:[" % key)
                     self.gen_xml_tabulator(value, out)
                     out.append("]},")
 
@@ -106,7 +127,11 @@ class PACEDBTBL(App):
             for idx, value in enumerate(xml):
 
                 if isinstance(value, dict):
-                    out.append("{name: '%d', value: '', _children:[" % idx)
+                    name, attrs = self.extract_xmlattrs(value)
+                    if name:
+                        out.append("{name: '%s', value: '%s', _children:[" % (name, attrs))
+                    else:
+                        out.append("{name: '%d', value: '%s', _children:[" % (idx, attrs))
                     self.gen_xml_tabulator(value, out)
                     out.append("]},")
 
