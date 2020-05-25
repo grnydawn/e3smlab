@@ -68,7 +68,7 @@ Please see `pacedb<https://github.com/grnydawn/e3smlab/blob/master/README.pacedb
 
 "**e3smlab** pacedbnml" command
 -----------------------------------------------------------------------
-The tool reads e3sm experiments namelists from database and converts to a format suitable for table viewer. Following example read e3sm namelists specified by <expid> and <namelist name> from database specified by "--db-cfg" option. All converted data will be displayed on screen from "-p" or "--print" option.::
+The tool reads e3sm experiment namelists from database and converts them to a format suitable for table viewer. Following example reads e3sm namelists specified by <expid> and <namelist name> from a database specified by "--db-cfg" option. All converted data will be displayed on screen by the "-p" or "--print" option.::
 
     >>> e3smlab pacedbnml <expid expid ...> --db-cfg <pace db config file> -n <namelist name> -p
 
