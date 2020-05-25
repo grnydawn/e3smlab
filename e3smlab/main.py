@@ -4,6 +4,7 @@ from .e3smtimestat import E3SMTimeStat
 from .inspectcompile import InspectCompile
 from .pacedb import PACEDB
 from .pacedbnml import PACEDBNML
+from .pacedbtbl import PACEDBTBL
 
 class E3SMlab(Meteolab):
     _name_ = "e3smlab"
@@ -14,7 +15,7 @@ class E3SMlab(Meteolab):
     _author_email_ = "youngsung.kim.act2@gmail.com"
     _url_ = "https://github.com/grnydawn/e3smlab"
     _builtin_apps_ = [NML2Json, E3SMTimeStat, InspectCompile,
-                      PACEDB, PACEDBNML]
+                      PACEDB, PACEDBNML, PACEDBTBL]
 
     def __init__(self):
         pass
