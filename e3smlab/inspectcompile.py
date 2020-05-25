@@ -16,7 +16,7 @@ STR_RE = b'resumed>'
 class InspectCompile(App):
 
     _name_ = "inspectcompile"
-    _version_ = "0.1.0"
+    _version_ = "0.1.1"
 
     def __init__(self, mgr):
 
@@ -24,7 +24,7 @@ class InspectCompile(App):
         self.add_argument("--removed", type=str, help="ouput a list of source files that are compiled but removed.")
         self.register_forward("data", help="json object")
 
-    def perform(self, mgr, args):
+    def perform(self, args):
 
         casedir = args.casedir["_"]
 

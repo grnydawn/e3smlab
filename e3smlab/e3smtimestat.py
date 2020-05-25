@@ -17,7 +17,7 @@ re_timestat = re.compile(pat_timestat)
 class E3SMTimeStat(App):
 
     _name_ = "e3smtimestat"
-    _version_ = "0.1.0"
+    _version_ = "0.1.1"
 
     def __init__(self, mgr):
 
@@ -25,7 +25,7 @@ class E3SMTimeStat(App):
         self.add_argument("-o", "--outfile", type=str, help="file path")
         self.register_forward("data", help="json object")
 
-    def perform(self, mgr, args):
+    def perform(self, args):
 
         # data header
         hdr = ("name", "processes", "threads", "count", "walltotal",
@@ -71,6 +71,6 @@ class E3SMTimeStat(App):
         if args.outfile:
             cmd += ["-o", args.outfile["_"]]
 
-        ret, fwds = mgr.run_command(cmd, forward={"data": rawdata})
+        ret, fwds = self.manager.run_command(cmd, forward={"data": rawdata})
 
         self.add_forward(data=fwds["data"])

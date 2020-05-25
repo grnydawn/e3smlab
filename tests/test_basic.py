@@ -10,7 +10,7 @@ def test_basic():
     prj = E3SMlab()
 
     cmd = "input @1 --forward '@x=2'"
-    ret = prj.main(cmd)
+    ret, fwds = prj.run_command(cmd)
 
     assert ret == 0
 
@@ -20,7 +20,7 @@ def test_print(capsys):
     prj = E3SMlab()
 
     cmd = "-- input @1 --forward '@x=2' -- print @x @data[0]"
-    ret = prj.main(cmd)
+    ret, fwds = prj.run_command(cmd)
 
     assert ret == 0
 
@@ -37,7 +37,7 @@ def test_nml2json():
     cmd = "nml2json %s -o %s" % (gzfile, jsonfile)
 
     prj = E3SMlab()
-    ret = prj.main(cmd)
+    ret, fwds = prj.run_command(cmd)
 
     assert ret == 0
     assert os.path.exists(jsonfile)
@@ -53,7 +53,7 @@ def test_timestat():
     cmd = "e3smtimestat %s -o %s" % (timestat, jsonfile)
 
     prj = E3SMlab()
-    ret = prj.main(cmd)
+    ret, fwds = prj.run_command(cmd)
 
     assert ret == 0
     assert os.path.exists(jsonfile)
@@ -67,7 +67,7 @@ def test_timestat():
 #    cmd = "inspectcompile %s" % e3smcasedir 
 #
 #    prj = E3SMlab()
-#    ret = prj.main(cmd)
+#    ret, fwds = prj.run_command(cmd)
 #
 #    assert ret == 0
 #
@@ -98,7 +98,7 @@ def test_timestat():
 #    cmd = "pacedb %s %s" % (expdata, dbcfg)
 #
 #    prj = E3SMlab()
-#    ret = prj.main(cmd)
+#    ret, fwds = prj.run_command(cmd)
 #
 #    assert ret == 0
 #

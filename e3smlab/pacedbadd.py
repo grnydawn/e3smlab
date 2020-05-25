@@ -84,7 +84,7 @@ class RCInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.4"
+    _version_ = "0.1.5"
 
     def __init__(self, mgr):
 
@@ -286,7 +286,7 @@ class PACEDB(App):
 
                 shutil.rmtree(unzipdir, ignore_errors=True)
 
-    def perform(self, mgr, args):
+    def perform(self, args):
 
         self.show_progress = args.progress
         self.verify_db = args.verify
@@ -295,7 +295,7 @@ class PACEDB(App):
 
         dbcfg = args.dbcfg["_"]
         if not os.path.isfile(dbcfg):
-            print("Could not find database configuration file: %s" % cbcfg)
+            print("Could not find database configuration file: %s" % dbcfg)
             sys.exit(-1)
 
         with open(dbcfg) as f:
