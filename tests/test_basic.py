@@ -187,4 +187,4 @@ def test_pacedb_table():
     assert ret == 0
     assert os.path.isfile(outfile)
 
-    #os.remove(outfile)
+    os.remove(outfile)
