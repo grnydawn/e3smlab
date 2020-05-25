@@ -167,20 +167,20 @@ def test_pacedb_table():
     expdata = "/data/pace-exp-files/exp-acmetest-130.zip"
     #expdata = "/data/pace-exp-files"
     dbcfg = "%s/dbcfg.txt" % str(Path.home())
-    #outfile = os.path.join(here, "table.txt")
-    outfile = "/pace/assets/static/test/js/tablenmlxml.txt"
+    outfile = os.path.join(here, "table.txt")
+    #outfile = "/pace/assets/static/test/js/tablenmlxml.txt"
 
     if node() != "e3sm" or not os.path.exists(expdata):
         return
 
 #    #cmd = ["pacedbnml", "24924", "24923", "24922", "24921", "24920", "24919", "24918", "24917", "24916", "24915", "-n", "atm_in", "--db-cfg", dbcfg, "-o", outfile]
-    cmd = ["pacedbtbl", "24924", "24923", "24922", "24921", "24920", "24919", "24918", "24917", "24916", "24915", "--db-cfg", dbcfg, "-o", outfile]
+#    cmd = ["pacedbtbl", "24924", "24923", "24922", "24921", "24920", "24919", "24918", "24917", "24916", "24915", "--db-cfg", dbcfg, "-o", outfile]
 #    #cmd = ["pacedbnml", "24924", "24923", "--db-cfg", dbcfg, "-o", outfile, "-n", "atm_in", "lnd_in"]
 #    cmd = ["pacedbnml", "130", "--db-cfg", dbcfg, "-o", outfile, "-n", "atm_in", "lnd_in"]
 #    #cmd = ["pacedbnml", "130", "--db-cfg", dbcfg, "-o", outfile]
 #    #cmd = ["pacedbnml", "24924", "24923", "--db-cfg", dbcfg, "-o", outfile]
 #    #cmd = ["pacedbnml", "24923", "--db-cfg", dbcfg, "-o", outfile]
-#    cmd = ["pacedbtbl", "24924", "--db-cfg", dbcfg, "-n", "atm_in", "-x", "env_case", "-o", outfile]
+    cmd = ["pacedbtbl", "24924", "--db-cfg", dbcfg, "-n", "atm_in", "-x", "env_case", "-o", outfile]
     lab = E3SMlab()
     ret, fwds = lab.run_command(cmd)
 
