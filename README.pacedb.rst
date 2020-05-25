@@ -58,25 +58,25 @@ datapath::
         hostname
         databasename
     
-    example >>> e3smlab exp-ndk-17906.zip --db-cfg mydbcfg.txt
+    example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt
    
 --progress::
 
     Print the name zipped e3sm data file that is currently being uploaded.
     
-    example >>> e3smlab exp-ndk-17906.zip --db-cfg mydbcfg.txt --progress
+    example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt --progress
 
 --verify::
 
     Verify database integrity by comparing data between database and zipped e3sm file.
 
-    example >>> e3smlab exp-ndk-17906.zip --db-cfg mydbcfg.txt --verify
+    example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt --verify
 
 --create-expid-table::
 
     Create a database table that keeps expid only. This is required to use test database.
 
-    example >>> e3smlab exp-ndk-17906.zip --db-cfg mydbcfg.txt --create-expid-table
+    example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt --create-expid-table
 
 --db-session::
 

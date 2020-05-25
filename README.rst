@@ -65,3 +65,11 @@ The tool reads E3SM experiment data and loads it to PACE database. The example s
     >>> e3smlab pacedb <e3sm experiment file or directory> --db-cfg <pace database config. file>
 
 Please see `pacedb<https://github.com/grnydawn/e3smlab/blob/master/README.pacedb.rst>` for details.
+
+"**e3smlab** pacedbnml" command
+-----------------------------------------------------------------------
+The tool reads e3sm experiments namelists from database and converts to a format suitable for table viewer. Following example read e3sm namelists specified by <expid> and <namelist name> from database specified by "--db-cfg" option. All converted data will be displayed on screen from "-p" or "--print" option.::
+
+    >>> e3smlab pacedbnml <expid expid ...> --db-cfg <pace db config file> -n <namelist name> -p
+
+Please see `pacedbnml<https://github.com/grnydawn/e3smlab/blob/master/README.pacedbnml.rst>` for details.

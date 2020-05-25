@@ -40,20 +40,22 @@ class PACEDBNML(App):
 
     def __init__(self, mgr):
 
-        self.add_argument("expid", type=str, nargs="+",
+        self.add_argument("expid", type=str, nargs="*",
                             help="list of experiment id")
-        self.add_argument("-n", "--namelist", type=str, nargs="*",
-                            help="list of namelist types")
-        self.add_argument("-f", "--format", default="tabulator",
-                            help="output data format")
-        self.add_argument("--db-cfg", type=str,
+        self.add_argument("-n", "--namelist", metavar="name", type=str,
+                            nargs="*", help="list of namelist types")
+        self.add_argument("-f", "--format", metavar="format", default="tabulator",
+                            help="output data format(default: tabulator)")
+        self.add_argument("--db-cfg", metavar="path", type=str,
                             help="database configuration data file")
-        self.add_argument("--db-session", type=typing.Any,
+        self.add_argument("--db-session", metavar="session", type=typing.Any,
                             help="database session")
-        self.add_argument("--defined-namelist", action="store_true",
-                            help="list of acceptable namelist names")
-        self.add_argument("-o", "--outfile", type=str, help="outfile path")
-        self.add_argument("-p", "--print", type=str, help="display on screen")
+        self.add_argument("--show-namelist", action="store_true",
+                            help="show a list of available namelist names")
+        self.add_argument("-o", "--outfile", metavar="path", type=str,
+                            help="outfile path")
+        self.add_argument("-p", "--print", action="store_true",
+                            help="show output on screen")
 
         self.register_forward("data", help="formatted namelists")
 
@@ -129,9 +131,9 @@ class PACEDBNML(App):
                     file=sys.stderr)
 
 
-    def perform(self, mgr, args):
+    def perform(self, args):
 
-        if args.defined_namelist:
+        if args.show_namelist:
             print("\n".join(namelists))
             sys.exit()
 
