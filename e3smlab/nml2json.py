@@ -4,7 +4,7 @@ from microapp import App
 class NML2Json(App):
 
     _name_ = "nml2json"
-    _version_ = "0.1.0"
+    _version_ = "0.1.1"
 
     def __init__(self, mgr):
 
@@ -12,7 +12,7 @@ class NML2Json(App):
         self.add_argument("-o", "--outfile", type=str, help="file path")
         self.register_forward("data", help="json object")
 
-    def perform(self, mgr, args):
+    def perform(self, args):
 
         cmd = ["gunzip", args.zipfile["_"], "--", "nmlread",  "@data", "--",
                  "dict2json", "@data"]
@@ -20,6 +20,6 @@ class NML2Json(App):
         if args.outfile:
             cmd += ["-o", args.outfile["_"]]
 
-        ret, fwds = mgr.run_command(cmd)
+        ret, fwds = self.manager.run_command(cmd)
 
         self.add_forward(data=fwds["data"])
