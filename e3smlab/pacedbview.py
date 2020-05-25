@@ -92,7 +92,6 @@ class PACEDB(App):
         self.add_argument("dbcfg", type=str,  help="database configuration data file")
         self.add_argument("--dbecho", action="store_true",  help="echo database transactions")
         self.add_argument("--progress", action="store_true",  help="show progress info")
-        self.add_argument("--verify", action="store_true",  help="verify database correctlness")
 
         #self.add_argument("-o", "--outfile", type=str, help="file path")
         #self.register_forward("data", help="json object")
