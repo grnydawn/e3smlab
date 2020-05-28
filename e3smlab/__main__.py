@@ -2,7 +2,8 @@
 
 def main():
     from e3smlab import E3SMlab
-    return E3SMlab().main()
+    ret, _ = E3SMlab().run_command()
+    return ret
 
 if __name__ == "__main__":
     main()
