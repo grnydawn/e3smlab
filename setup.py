@@ -8,7 +8,7 @@ def main():
     console_scripts = ["e3smlab=e3smlab.__main__:main"]
     install_requires = ["meteolab>=0.2.4", "gunzip>=0.1.10", "nmlread>=0.1.5",
                         "dict2json>=0.1.2", "uxml2dict>=0.2.2",
-                        "langlab>=0.2.4", "sqlalchemy"]
+                        "langlab>=0.2.4", "sqlalchemy", "pymysql"]
 
     setup(
         name=elab._name_,
