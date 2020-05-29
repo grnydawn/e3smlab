@@ -98,8 +98,12 @@ class PACEDBNML(App):
                 text = str(value)
 
             except Exception as err:
-                import pdb; pdb.set_trace()
-                print(err)
+                if type(value) == type(u""):
+                    text = "'%s'" % value.encode("utf-8")
+
+                else:
+                    import pdb; pdb.set_trace()
+                    print(err)
 
         if escape:
             text = text.replace("'", "\\'")
@@ -113,6 +117,10 @@ class PACEDBNML(App):
 
         if nml and nml.data:
             data = json.loads(nml.data)
+
+            # for debugging
+            #with open("/home/8yk/temp/%s.json" % namelist, "w") as f:
+            #    f.write(nml.data)
 
             out = []
             getattr(self, "gen_"+self.format, self.gen_tabulator)(data, out)

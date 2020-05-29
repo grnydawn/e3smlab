@@ -102,15 +102,16 @@ class MakefileInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.5"
+    _version_ = "0.1.7"
 
     def __init__(self, mgr):
 
-        self.add_argument("datapath", type=str, help="input data path")
+        self.add_argument("datapath", type=str, nargs="+", help="input data path")
         self.add_argument("--db-cfg", type=str,  help="database configuration data file")
         self.add_argument("--db-echo", action="store_true",  help="echo database transactions")
         self.add_argument("--progress", action="store_true",  help="show progress info")
         self.add_argument("--verify", action="store_true",  help="verify database correctlness")
+        self.add_argument("--commit", action="store_true",  help="commit database updates")
         self.add_argument("--create-expid-table", action="store_true",  help="create expid table for development")
         self.add_argument("--db-session", type=typing.Any,  help="database session")
 
@@ -323,7 +324,8 @@ class PACEDB(App):
 
                     try:
                         self.session.add(E3SMexp(expid))
-                        self.session.commit()
+                        if self.commit_updates:
+                            self.session.commit()
 
                     except (InvalidRequestError, IntegrityError) as err:
                         print("Warning: database integrity error: %s" % str(err))
@@ -357,7 +359,12 @@ class PACEDB(App):
                 if not self.verify_db:
 
                     try:
-                        self.session.commit()
+                        if self.commit_updates:
+                            self.session.commit()
+
+                        else:
+                            print("INFO: pacedb ended without committing any "
+                                  "staged database transaction.")
 
                     except (InvalidRequestError, IntegrityError) as err:
                         print("Warning: database integrity error: %s" % str(err))
@@ -370,35 +377,37 @@ class PACEDB(App):
         self.show_progress = args.progress
         self.verify_db = args.verify
         self.create_expid_table = args.create_expid_table
+        self.commit_updates = args.commit
 
-        inputpath = args.datapath["_"]
+        for datapath in args.datapath:
+            inputpath = datapath["_"]
 
-        if not args.db_session:
-            dbcfg = args.db_cfg["_"]
-            if not os.path.isfile(dbcfg):
-                print("Could not find database configuration file: %s" % dbcfg)
-                sys.exit(-1)
+            if not args.db_session:
+                dbcfg = args.db_cfg["_"]
+                if not os.path.isfile(dbcfg):
+                    print("Could not find database configuration file: %s" % dbcfg)
+                    sys.exit(-1)
 
-            with open(dbcfg) as f:
-                myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
-                
-            dburl = 'mysql+pymysql://%s:%s@%s/%s' % (myuser, mypwd, myhost, mydb)
-            engine = create_engine(dburl, echo=args.db_echo)
-            Base.metadata.create_all(engine)
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
-
-        else:
-            self.session = args.db_session["_"]
-
-        with TemporaryDirectory() as self.tempdir:
-            if os.path.isdir(inputpath):
-                for item in os.listdir(inputpath):
-                    self.loaddb_e3smexp(os.path.join(inputpath, item))
-
-            elif os.path.isfile(inputpath):
-                self.loaddb_e3smexp(inputpath)
+                with open(dbcfg) as f:
+                    myuser, mypwd, myhost, mydb = f.read().strip().split("\n")
+                    
+                dburl = 'mysql+pymysql://%s:%s@%s/%s' % (myuser, mypwd, myhost, mydb)
+                engine = create_engine(dburl, echo=args.db_echo)
+                Base.metadata.create_all(engine)
+                Session = sessionmaker(bind=engine)
+                self.session = Session()
 
             else:
-                print("Can't find input path: %s" % inputpath, file=sys.stderr)
-                sys.exit(-1)
+                self.session = args.db_session["_"]
+
+            with TemporaryDirectory() as self.tempdir:
+                if os.path.isdir(inputpath):
+                    for item in os.listdir(inputpath):
+                        self.loaddb_e3smexp(os.path.join(inputpath, item))
+
+                elif os.path.isfile(inputpath):
+                    self.loaddb_e3smexp(inputpath)
+
+                else:
+                    print("Can't find input path: %s" % inputpath, file=sys.stderr)
+                    sys.exit(-1)
