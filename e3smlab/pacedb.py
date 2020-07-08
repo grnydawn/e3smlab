@@ -132,10 +132,10 @@ class PACEDB(App):
 
         jsondata = json.dumps(mkitems)
 
-        if self.verify_db:
-            mk = self.session.query(MakefileInputs).filter_by(
-                    expid=expid, name=name).first()
+        mk = self.session.query(MakefileInputs).filter_by(
+                expid=expid, name=name).first()
 
+        if self.verify_db:
             if not mk or jsondata != mk.data:
                 print("#######################################################")
                 print("makefile verification failure: expid=%d, name=%s" % (expid, name))
@@ -145,8 +145,12 @@ class PACEDB(App):
                 print("From database:")
                 print(mk.data if mk else mk)
         else:
-            mk = MakefileInputs(expid, name, jsondata)
-            self.session.add(mk)
+            if mk:
+                print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+            else:
+                mk = MakefileInputs(expid, name, jsondata)
+                self.session.add(mk)
 
 
     def loaddb_rcfile(self, expid, name, rcpath):
@@ -165,10 +169,10 @@ class PACEDB(App):
 
         jsondata = "{%s}" % ",".join(rcitems) 
 
-        if self.verify_db:
-            rc = self.session.query(RCInputs).filter_by(
-                    expid=expid, name=name).first()
+        rc = self.session.query(RCInputs).filter_by(
+                expid=expid, name=name).first()
 
+        if self.verify_db:
             #e3smdump = json.dumps(rc.data, sort_keys=True) if rc else ""
             #dbdump = json.dumps(jsondata, sort_keys=True)
             #if e3smdump != dbdump:
@@ -183,8 +187,12 @@ class PACEDB(App):
                 #print(dbdump)
                 print(rc.data if rc else rc)
         else:
-            rc = RCInputs(expid, name, jsondata)
-            self.session.add(rc)
+            if rc:
+                print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+            else:
+                rc = RCInputs(expid, name, jsondata)
+                self.session.add(rc)
 
     def loaddb_xmlfile(self, expid, name, xmlpath):
  
@@ -199,10 +207,10 @@ class PACEDB(App):
 
             jsondata = fwds["data"]
 
-            if self.verify_db:
-                xml = self.session.query(XMLInputs).filter_by(
-                        expid=expid, name=name).first()
+            xml = self.session.query(XMLInputs).filter_by(
+                    expid=expid, name=name).first()
 
+            if self.verify_db:
                 #e3smdump = json.dumps(xml.data, sort_keys=True) if xml else ""
                 #dbdump = json.dumps(jsondata, sort_keys=True)
                 #if e3smdump != dbdump:
@@ -217,8 +225,12 @@ class PACEDB(App):
                     #print(dbdump)
                     print(xml.data if xml else xml)
             else:
-                xml = XMLInputs(expid, name, jsondata)
-                self.session.add(xml)
+                if xml:
+                    print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+                else:
+                    xml = XMLInputs(expid, name, jsondata)
+                    self.session.add(xml)
 
         except ExpatError as err:
             print("Warning: %s" % str(err))
@@ -257,10 +269,10 @@ class PACEDB(App):
             import pdb; pdb.set_trace()
             print(err)
 
-        if self.verify_db:
-            nml = self.session.query(NamelistInputs).filter_by(
+        nml = self.session.query(NamelistInputs).filter_by(
                     expid=expid, name=name).first()
 
+        if self.verify_db:
             #e3smdump = json.dumps(nml.data, sort_keys=True) if nml else ""
             #dbdump = json.dumps(jsondata, sort_keys=True)
             #if e3smdump != dbdump:
@@ -276,8 +288,12 @@ class PACEDB(App):
                 print(nml.data if nml else nml)
 
         elif jsondata:
-            nml = NamelistInputs(expid, name, jsondata)
-            self.session.add(nml)
+            if nml:
+                print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+            else:
+                nml = NamelistInputs(expid, name, jsondata)
+                self.session.add(nml)
 
     def loaddb_casedocs(self, expid, casedocpath):
 

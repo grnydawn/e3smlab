@@ -28,15 +28,21 @@ def insertInputs(zipfile, dbcfg, stdout, stderr=None):
     int: return code
 
     Notes:
-    * As of this version, this function works if e3smlab is installed in Python 3.
-      To make sure that e3smlab is installed in Python 3 env., user following command to install::
+    * As of this version, this function works only if e3smlab is installed
+        in Python 3. To make sure that e3smlab is installed in Python 3,
+        use following command to install e3smlab::
 
         python3 -m pip install e3smlab
 
+    * This function assumes that e3smexp table exists and the table already
+        has the expid of this zipped data. It may require to commit any staged
+        transaction before calling this function
     """
 
     import subprocess
-    cmd = ["e3smlab", "pacedb", zipfile, "--db-cfg", dbcfg, "--create-expid-table", "--commit"]
+    #cmd = ["e3smlab", "pacedb", zipfile, "--db-cfg", dbcfg, "--commit"]
+    cmd = ["e3smlab", "pacedb", zipfile, "--db-cfg", dbcfg,
+           "--create-expid-table", "--commit"]
     return subprocess.call(cmd, stdout=stdout, stderr=stderr)
 
 
