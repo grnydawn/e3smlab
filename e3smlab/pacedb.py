@@ -23,7 +23,8 @@ xmlfiles = ("env_archive", "env_batch", "env_build", "env_case",
 
 rcfiles = ("seq_maps",)
 
-makefiles = ("Depends.intel",)
+#makefiles = ("Depends.intel",)
+makefiles = ("Depends",)
 
 exclude_zipfiles = []
 excludes_casedocs = ["env_mach_specific.xml~"]
@@ -304,22 +305,31 @@ class PACEDB(App):
                 continue
 
             if os.path.isfile(path) and ext == ".gz":
-                prefix, _ = basename.split(".", 1)
+                #prefix, _ = basename.split(".", 1)
+                nameseq = []
+                for n in basename.split("."):
+                    if n.isdigit():
+                        break
+                    nameseq.append(n)
+                name = ".".join(nameseq)
 
-                if prefix in namelists:
-                    self.loaddb_namelist(expid, prefix, path)
+                if nameseq[0] in namelists:
+                    self.loaddb_namelist(expid, name, path)
 
-                elif prefix in xmlfiles:
-                    self.loaddb_xmlfile(expid, prefix, path)
+                elif nameseq[0] in xmlfiles:
+                    self.loaddb_xmlfile(expid, name, path)
 
-                elif prefix in rcfiles:
-                    self.loaddb_rcfile(expid, prefix, path)
+                elif nameseq[0] in rcfiles:
+                    self.loaddb_rcfile(expid, name, path)
 
-                elif any(basename.startswith(p) for p in makefiles):
-                    for makefile in makefiles:
-                        if basename.startswith(makefile):
-                            self.loaddb_makefile(expid, makefile, path)
-                            break
+                elif nameseq[0] in makefiles:
+                    self.loaddb_makefile(expid, name, path)
+
+#                elif any(basename.startswith(p) for p in makefiles):
+#                    for makefile in makefiles:
+#                        if basename.startswith(makefile):
+#                            self.loaddb_makefile(expid, makefile, path)
+#                            break
                 else:
                     pass
                     #print("Warning: %s is not parsed." % basename)
