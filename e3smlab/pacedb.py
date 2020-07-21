@@ -103,7 +103,7 @@ class MakefileInputs(Base):
 class PACEDB(App):
 
     _name_ = "pacedb"
-    _version_ = "0.1.7"
+    _version_ = "0.1.8"
 
     def __init__(self, mgr):
 
@@ -133,6 +133,7 @@ class PACEDB(App):
 
         jsondata = json.dumps(mkitems)
 
+        #try:
         mk = self.session.query(MakefileInputs).filter_by(
                 expid=expid, name=name).first()
 
@@ -153,6 +154,9 @@ class PACEDB(App):
                 mk = MakefileInputs(expid, name, jsondata)
                 self.session.add(mk)
 
+        #except (InvalidRequestError, IntegrityError) as err:
+        #    print("Missing expid in database: expid=%d, makefile-name=%s" % (expid, name))
+
 
     def loaddb_rcfile(self, expid, name, rcpath):
  
@@ -170,6 +174,7 @@ class PACEDB(App):
 
         jsondata = "{%s}" % ",".join(rcitems) 
 
+        #try:
         rc = self.session.query(RCInputs).filter_by(
                 expid=expid, name=name).first()
 
@@ -195,6 +200,9 @@ class PACEDB(App):
                 rc = RCInputs(expid, name, jsondata)
                 self.session.add(rc)
 
+        #except (InvalidRequestError, IntegrityError) as err:
+        #    print("Missing expid in database: expid=%d, rc-name=%s" % (expid, name))
+
     def loaddb_xmlfile(self, expid, name, xmlpath):
  
         cmd = ["gunzip", xmlpath, "--", "uxml2dict",  "@data", "--",
@@ -202,12 +210,12 @@ class PACEDB(App):
 
         from xml.parsers.expat import ExpatError
 
+        mgr = self.get_manager()
+        ret, fwds = mgr.run_command(cmd)
+
+        jsondata = fwds["data"]
+
         try:
-            mgr = self.get_manager()
-            ret, fwds = mgr.run_command(cmd)
-
-            jsondata = fwds["data"]
-
             xml = self.session.query(XMLInputs).filter_by(
                     expid=expid, name=name).first()
 
@@ -227,7 +235,7 @@ class PACEDB(App):
                     print(xml.data if xml else xml)
             else:
                 if xml:
-                    print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+                    print("Insertion is discarded due to dupulication: expid=%d, xml-name=%s" % (expid, name))
 
                 else:
                     xml = XMLInputs(expid, name, jsondata)
@@ -236,10 +244,13 @@ class PACEDB(App):
         except ExpatError as err:
             print("Warning: %s" % str(err))
 
-        except Exception as err:
-            print("Warning: %s" % str(err))
-            import pdb; pdb.set_trace()
-            print(err)
+        #except (InvalidRequestError, IntegrityError) as err:
+        #    print("Missing expid in database: expid=%d, xml-name=%s" % (expid, name))
+
+        #except Exception as err:
+        #    print("Warning: %s" % str(err))
+        #    import pdb; pdb.set_trace()
+        #    print(err)
 
     def loaddb_namelist(self, expid, name, nmlpath):
 
@@ -270,6 +281,7 @@ class PACEDB(App):
             import pdb; pdb.set_trace()
             print(err)
 
+        #try:
         nml = self.session.query(NamelistInputs).filter_by(
                     expid=expid, name=name).first()
 
@@ -295,6 +307,9 @@ class PACEDB(App):
             else:
                 nml = NamelistInputs(expid, name, jsondata)
                 self.session.add(nml)
+
+        #except (InvalidRequestError, IntegrityError) as err:
+        #    print("Missing expid in database: expid=%d, namelist-name=%s" % (expid, name))
 
     def loaddb_casedocs(self, expid, casedocpath):
 
@@ -362,41 +377,43 @@ class PACEDB(App):
                 print("reading %s" % zippath)
 
             with ZipFile(zippath) as myzip:
+
                 unzipdir = os.path.join(self.tempdir, basename)
                 myzip.extractall(path=unzipdir)
 
-                for item in os.listdir(unzipdir):
-                    if item.startswith(".") or item in exclude_zipfiles:
-                        continue
+                try:
+                    for item in os.listdir(unzipdir):
+                        if item.startswith(".") or item in exclude_zipfiles:
+                            continue
 
-                    basename, ext = os.path.splitext(item)
-                    path = os.path.join(unzipdir, item)
+                        basename, ext = os.path.splitext(item)
+                        path = os.path.join(unzipdir, item)
 
-                    if os.path.isdir(path):
+                        if os.path.isdir(path):
 
-                        if basename.startswith("CaseDocs"):
-                            self.loaddb_casedocs(expid, path)
+                            if basename.startswith("CaseDocs"):
+                                self.loaddb_casedocs(expid, path)
 
+                            else:
+                                pass
                         else:
                             pass
-                    else:
-                        pass
 
-                if not self.verify_db:
+                    if not self.verify_db:
 
-                    try:
-                        if self.commit_updates:
-                            self.session.commit()
+                            if self.commit_updates:
+                                self.session.commit()
 
-                        else:
-                            print("INFO: pacedb ended without committing any "
-                                  "staged database transaction.")
+                            else:
+                                print("INFO: pacedb ended without committing any "
+                                      "staged database transaction.")
 
-                    except (InvalidRequestError, IntegrityError) as err:
-                        print("Warning: database integrity error: %s" % str(err))
-                        self.session.rollback()
+                except (InvalidRequestError, IntegrityError) as err:
+                    print("Warning: database integrity error at %s: %s" % (zippath, str(err)))
+                    self.session.rollback()
 
-                shutil.rmtree(unzipdir, ignore_errors=True)
+                finally:                
+                    shutil.rmtree(unzipdir, ignore_errors=True)
 
     def perform(self, args):
 
