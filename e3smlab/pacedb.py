@@ -210,12 +210,12 @@ class PACEDB(App):
 
         from xml.parsers.expat import ExpatError
 
-        mgr = self.get_manager()
-        ret, fwds = mgr.run_command(cmd)
-
-        jsondata = fwds["data"]
-
         try:
+            mgr = self.get_manager()
+            ret, fwds = mgr.run_command(cmd)
+
+            jsondata = fwds["data"]
+
             xml = self.session.query(XMLInputs).filter_by(
                     expid=expid, name=name).first()
 
@@ -360,6 +360,10 @@ class PACEDB(App):
 
         if ext == ".zip" and len(items)==3:
             expid = int(items[2])
+
+            if self.session.query(E3SMexp.expid).filter_by(expid=expid).scalar() is None:
+                print("Warning: Expid, %d, does not exist in database." % expid)
+                return
 
             if not self.verify_db and self.create_expid_table:
 
