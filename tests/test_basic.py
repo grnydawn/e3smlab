@@ -31,7 +31,7 @@ def test_print(capsys):
 
 def test_nml2json():
 
-    gzfile = os.path.join(here, "data.gz")
+    gzfile = os.path.join(here, "data", "data.gz")
     jsonfile = os.path.join(here, "data.json")
 
     cmd = "nml2json %s -o %s" % (gzfile, jsonfile)

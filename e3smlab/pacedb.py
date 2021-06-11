@@ -1,4 +1,4 @@
-import sys, os, shutil, json, typing
+import sys, os, shutil, json, typing, tarfile
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from microapp import App
@@ -27,8 +27,13 @@ rcfiles = ("seq_maps",)
 #makefiles = ("Depends.intel",)
 makefiles = ("Depends",)
 
+memfiles = ("memory",)
+
+spiofiles = ("spio_stats",)
+
 exclude_zipfiles = []
 excludes_casedocs = ["env_mach_specific.xml~"]
+excludes_gzfiles = []
 
 Base = declarative_base()
 
@@ -86,6 +91,31 @@ class RCInputs(Base):
         self.name = name
         self.data = data
 
+class SpiofileInputs(Base):
+    __tablename__ = 'spiofile_inputs'
+
+    expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
+            nullable=False, index=True, primary_key=True)
+    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
+    data = Column(MEDIUMTEXT, nullable=False)
+
+    def __init__(self, expid, name, data):
+        self.expid = expid
+        self.name = name
+        self.data = data
+
+class MemfileInputs(Base):
+    __tablename__ = 'memfile_inputs'
+
+    expid = Column(INTEGER(unsigned=True), ForeignKey('e3smexp.expid'),
+            nullable=False, index=True, primary_key=True)
+    name = Column(VARCHAR(100), nullable=False, index=True, primary_key=True)
+    data = Column(MEDIUMTEXT, nullable=False)
+
+    def __init__(self, expid, name, data):
+        self.expid = expid
+        self.name = name
+        self.data = data
 
 class MakefileInputs(Base):
     __tablename__ = 'makefile_inputs'
@@ -118,7 +148,96 @@ class PACEDB(App):
         self.add_argument("--db-session", type=typing.Any,  help="database session")
 
         #self.add_argument("-o", "--outfile", type=str, help="file path")
-        #self.register_forward("data", help="json object")
+ 
+    def loaddb_spiofile(self, expid, name, spiofile):
+
+        # TODO: handle a direcotry generated from this gz file
+        # TODO: select a json file
+
+        sptar = tarfile.open(spiofile, "r:gz")
+        
+        jsonmember = None
+        jsondata = None
+
+        for member in sptar.getmembers():
+            if member.isfile() and member.name.endswith("json"):
+                if jsonmember is None or jsonmember.size < member.size:
+                    jsonmember = member
+
+        if jsonmember:
+            jsondata = sptar.extractfile(jsonmember).read()
+
+        sptar.close()
+
+        #cmd = ["gunzip", spiofile]
+        #mgr = self.get_manager()
+        #ret, fwds = mgr.run_command(cmd)
+
+        #spioitems = []
+
+        #for item in fwds["data"]:
+        #    spioitems.append(item.to_source())
+
+        #jsondata = json.dumps(memitems)
+
+        spio = self.session.query(SpiofileInputs).filter_by(
+                expid=expid, name=name).first()
+
+        if self.verify_db:
+            if not spio or jsondata != spio.data:
+                print("#######################################################")
+                print("spiofile verification failure: expid=%d, name=%s" % (expid, name))
+                print("From e3sm experiment:")
+                print(jsondata)
+                print("-------------------------------------------------------")
+                print("From database:")
+                print(spio.data if spio else spio)
+        else:
+            if spio:
+                print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+            elif jsondata is None:
+                print("Json data read error: expid=%d, name=%s" % (expid, name))
+
+            else:
+                spio = SpiofileInputs(expid, name, jsondata)
+                self.session.add(spio)
+
+    def loaddb_memfile(self, expid, name, memfile):
+  
+        cmd = ["gunzip", memfile]
+
+        mgr = self.get_manager()
+        ret, fwds = mgr.run_command(cmd)
+
+        memitems = []
+
+        for item in fwds["data"]:
+            memitems.append(item.to_source())
+
+        # TODO: json load?
+        jsondata = json.dumps(memitems)
+
+        #try:
+        mem = self.session.query(MemfileInputs).filter_by(
+                expid=expid, name=name).first()
+
+        if self.verify_db:
+            if not mem or jsondata != mem.data:
+                print("#######################################################")
+                print("memfile verification failure: expid=%d, name=%s" % (expid, name))
+                print("From e3sm experiment:")
+                print(jsondata)
+                print("-------------------------------------------------------")
+                print("From database:")
+                print(mem.data if mem else mem)
+        else:
+            if mem:
+                print("Insertion is discarded due to dupulication: expid=%d, name=%s" % (expid, name))
+
+            else:
+                mem = MemfileInputs(expid, name, jsondata)
+                self.session.add(mem)
 
     def loaddb_makefile(self, expid, name, makefile):
   
@@ -341,6 +460,9 @@ class PACEDB(App):
                 elif nameseq[0] in makefiles:
                     self.loaddb_makefile(expid, name, path)
 
+                elif nameseq[0] in memfiles:
+                    self.loaddb_memfile(expid, name, path)
+
 #                elif any(basename.startswith(p) for p in makefiles):
 #                    for makefile in makefiles:
 #                        if basename.startswith(makefile):
@@ -362,10 +484,6 @@ class PACEDB(App):
         if ext == ".zip" and len(items)==3:
             expid = int(items[2])
 
-            if self.session.query(E3SMexp.expid).filter_by(expid=expid).scalar() is None:
-                print("Warning: Expid, %d, does not exist in database." % expid)
-                return
-
             if not self.verify_db and self.create_expid_table:
 
                     try:
@@ -377,6 +495,10 @@ class PACEDB(App):
                         print("Warning: database integrity error: %s" % str(err))
                         self.session.rollback()
                         return
+
+            if self.session.query(E3SMexp.expid).filter_by(expid=expid).scalar() is None:
+                print("Warning: Expid, %d, does not exist in database." % expid)
+                return
 
             if self.show_progress:
                 print("reading %s" % zippath)
@@ -398,6 +520,24 @@ class PACEDB(App):
 
                             if basename.startswith("CaseDocs"):
                                 self.loaddb_casedocs(expid, path)
+
+                            else:
+                                pass
+
+                        elif os.path.isfile(path) and ext == ".gz":
+
+                            if any(basename.startswith(e) for e in excludes_gzfiles):
+                                continue
+
+                            nameseq = []
+                            for n in basename.split("."):
+                                if n.isdigit():
+                                    break
+                                nameseq.append(n)
+                            name = ".".join(nameseq)
+
+                            if nameseq[0] in spiofiles:
+                                self.loaddb_spiofile(expid, name, path)
 
                             else:
                                 pass

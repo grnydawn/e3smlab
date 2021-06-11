@@ -1,0 +1,1 @@
+e3smlab pacedb data --db-cfg ~/dbcfg.txt --commit
