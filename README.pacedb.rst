@@ -24,7 +24,7 @@ command line arguments::
                           [--import IMPORT] [--assert-in expr] [--assert-out expr]
                           [--assert-forward expr] [--assert-share expr]
                           [--assert-downcast expr] [--version] [--db-cfg DB_CFG]
-                          [--db-echo] [--progress] [--verify]
+                          [--db-echo] [--progress] [--verify] [--commit]
                           [--create-expid-table] [--db-session DB_SESSION]
                           datapath
 
@@ -39,6 +39,7 @@ command line arguments::
       --progress            show progress info
       --verify              verify database correctlness
       --create-expid-table  create expid table for development
+      --commit              commit database updates
       --db-session DB_SESSION
                             database session
 
@@ -71,6 +72,12 @@ datapath::
     Verify database integrity by comparing data between database and zipped e3sm file.
 
     example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt --verify
+    
+--commit::
+
+    Issue commit to update database with this transactions
+
+    example >>> e3smlab pacedb exp-ndk-17906.zip --db-cfg mydbcfg.txt --commit    
 
 --create-expid-table::
 
